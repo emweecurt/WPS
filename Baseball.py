@@ -1,6 +1,7 @@
 import requests
 import json
 import sys
+import datetime
 
 # boxscore: the whole boxscore.json file from gd2.mlb.com for a single game
 # returns pitching data for both starting pictchers in a tuple
@@ -29,22 +30,29 @@ def fetch_boxscore(url):
         return
     return response.json()
 
-url = 'http://gd2.mlb.com/components/game/mlb/year_2017/month_05/day_01/gid_2017_05_01_milmlb_slnmlb_1/boxscore.json'
-data = fetch_boxscore(url)
-if(data == None):
-    sys.exit()
+def handle_single_game(date, gid):
+    # Construct gd2 URL
+    month_padded = date.strftime('%m')
+    day_padded = date.strftime('%d')
+    url = 'http://gd2.mlb.com/components/game/mlb/year_' + str(date.year) + '/month_' + month_padded + '/day_' + day_padded + '/' + gid + '/boxscore.json'
 
-(away_starter, home_starter) = get_game_starters(data)
-#print(game_one)
+    data = fetch_boxscore(url)
+    if(data == None):
+        return
 
-away_starter_gs = away_starter["game_score"]
-home_starter_gs = home_starter["game_score"]
+    (away_starter, home_starter) = get_game_starters(data)
 
-print(away_starter_gs)
-print(home_starter_gs)
+    away_starter_gs = away_starter["game_score"]
+    home_starter_gs = home_starter["game_score"]
 
-(away_runs, home_runs) = get_game_runs(data)
+    print('Away game score:', away_starter_gs)
+    print('Home game score:', home_starter_gs)
 
-home_won = home_runs > away_runs
+    (away_runs, home_runs) = get_game_runs(data)
+    home_won = home_runs > away_runs
 
-print(home_won)
+    print('Home won?', home_won)
+
+date = datetime.date(2017, 5, 1)
+gid = 'gid_2017_05_01_milmlb_slnmlb_1'
+handle_single_game(date, gid)
