@@ -25,8 +25,8 @@ def get_game_starters(boxscore):
 # boxscore: the whole boxscore.json file from gd2.mlb.com for a single game
 # returns number of runs scored by the away team and home team in a tuple
 def get_game_runs(boxscore):
-    home_team_runs = boxscore['data']['boxscore']['linescore']['home_team_runs']
-    away_team_runs = boxscore['data']['boxscore']['linescore']['away_team_runs']
+    home_team_runs = int(boxscore['data']['boxscore']['linescore']['home_team_runs'])
+    away_team_runs = int(boxscore['data']['boxscore']['linescore']['away_team_runs'])
     return (away_team_runs, home_team_runs)
 
 # url: the url to a json file
@@ -101,8 +101,8 @@ def handle_single_day(date):
     for gid in gids:
         handle_single_game(date, gid)
 
-start = datetime.date(2017, 5, 20)
-end = datetime.date(2017, 5, 20)
+start = datetime.date(2016, 6, 10)
+end = datetime.date(2016, 6, 22)
 delta = datetime.timedelta(days = 1)
 d = start
 while d <= end:
