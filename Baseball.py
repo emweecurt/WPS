@@ -2,6 +2,11 @@ import requests
 import json
 import sys
 import datetime
+import sqlite3
+
+conn = sqlite3.connect('Pitching_data.db')
+
+c = conn.cursor()
 
 # boxscore: the whole boxscore.json file from gd2.mlb.com for a single game
 # returns pitching data for both starting pictchers in a tuple
@@ -101,10 +106,27 @@ def handle_single_day(date):
     for gid in gids:
         handle_single_game(date, gid)
 
-start = datetime.date(2016, 6, 10)
-end = datetime.date(2016, 6, 22)
-delta = datetime.timedelta(days = 1)
-d = start
-while d <= end:
-    handle_single_day(d)
-    d += delta
+# start = datetime.date(2016, 6, 10)
+# end = datetime.date(2016, 6, 22)
+# delta = datetime.timedelta(days = 1)
+# d = start
+# while d <= end:
+#     handle_single_day(d)
+#     d += delta
+
+# DATABASE STUFF
+
+def add_single_start(Id, GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2):
+    c.execute(f'''INSERT INTO starts (Id, GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2)
+        VALUES ({Id}, {GameId}, '{PitcherName}',  {PitcherId}, {IsHomeTeam}, {Outs}, {H}, {R}, {ER}, {HR}, {BB}, {SO}, {NP}, {S}, {BF}, {GS}, {GS_BJ}, {GS_2})''')
+
+    conn.commit()
+
+def add_single_game(Id, Date, HomeTeam, AwayTeam, Park, HomeTeamWon):
+    c.execute(f'''INSERT INTO games (Id, Date, HomeTeam, AwayTeam, Park, HomeTeamWon)
+        VALUES ({Id}, '{Date}', '{HomeTeam}', '{AwayTeam}', '{Park}', {HomeTeamWon})''')
+    
+    conn.commit()
+
+add_single_game(1, '2017_05_01', 'STL Cardinals', 'ATL Barves', 'Microsoft Field', 1)
+add_single_start(1, 1, 'Michael Wacha', 12674, 1, 15, 3, 2, 1, 0, 3, 4, 85, 58, 23, 12, 12, 18)
