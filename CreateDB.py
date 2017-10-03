@@ -4,10 +4,10 @@ conn = sqlite3.connect('Pitching_data.db')
 
 c = conn.cursor()
 
-c.execute("PRAGMA foreign_keys = on")
+c.execute("PRAGMA foreign_keys = 1")
 
 c.execute('''CREATE TABLE IF NOT EXISTS games (
-    Id INTEGER PRIMARY KEY, 
+    Id TEXT PRIMARY KEY, 
     Date TEXT, 
     HomeTeam TEXT, 
     AwayTeam TEXT, 
@@ -16,7 +16,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS games (
 
 c.execute('''CREATE TABLE IF NOT EXISTS starts (
     Id INTEGER PRIMARY KEY, 
-    GameId INTEGER, 
+    GameId TEXT, 
     PitcherName TEXT, 
     PitcherId INTEGER,
     IsHomeTeam INTEGER, 

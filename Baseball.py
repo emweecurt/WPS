@@ -8,6 +8,8 @@ conn = sqlite3.connect('Pitching_data.db')
 
 c = conn.cursor()
 
+c.execute("PRAGMA foreign_keys = 1")
+
 # boxscore: the whole boxscore.json file from gd2.mlb.com for a single game
 # returns pitching data for both starting pictchers in a tuple
 def get_game_starters(boxscore):
@@ -62,22 +64,19 @@ def handle_single_game(date, gid):
         print("No data.", "\n")
         return
 
+    # retrieve pitching data
     (away_starter, home_starter) = get_game_starters(data)
 
-    # pull game scores
-    away_starter_gs = away_starter["game_score"]
-    home_starter_gs = home_starter["game_score"]
-
-    # print game scores
-    print('Away game score:', away_starter_gs)
-    print('Home game score:', home_starter_gs)
-
-    # pull game result
+    # determine if home team won
+    home_won = 0
     (away_runs, home_runs) = get_game_runs(data)
-    home_won = home_runs > away_runs
+    if(home_runs > away_runs):
+        home_won = 1
 
-    # print game result
-    print('Home won?', home_won, "\n")
+    # add game and starters to database
+    add_single_game(gid, date.isoformat(), data["data"]["boxscore"]["home_fname"], data["data"]["boxscore"]["away_fname"], data["data"]["boxscore"]["venue_name"], home_won)
+    add_single_start(gid, away_starter["name_display_first_last"], away_starter["id"], 0, away_starter["out"], away_starter["h"], away_starter["r"], away_starter["er"], away_starter["hr"], away_starter["bb"], away_starter["so"], away_starter["np"], away_starter["s"], away_starter["bf"], away_starter["game_score"], -1, -1)
+    add_single_start(gid, home_starter["name_display_first_last"], home_starter["id"], 1, home_starter["out"], home_starter["h"], home_starter["r"], home_starter["er"], home_starter["hr"], home_starter["bb"], home_starter["so"], home_starter["np"], home_starter["s"], home_starter["bf"], home_starter["game_score"], -1, -1)
 
 # date: date of interest
 # returns list of gids for date provided
@@ -106,7 +105,7 @@ def handle_single_day(date):
     for gid in gids:
         handle_single_game(date, gid)
 
-# start = datetime.date(2016, 6, 10)
+start = datetime.date(2016, 6, 10)
 # end = datetime.date(2016, 6, 22)
 # delta = datetime.timedelta(days = 1)
 # d = start
@@ -116,17 +115,19 @@ def handle_single_day(date):
 
 # DATABASE STUFF
 
-def add_single_start(Id, GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2):
-    c.execute(f'''INSERT INTO starts (Id, GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2)
-        VALUES ({Id}, {GameId}, '{PitcherName}',  {PitcherId}, {IsHomeTeam}, {Outs}, {H}, {R}, {ER}, {HR}, {BB}, {SO}, {NP}, {S}, {BF}, {GS}, {GS_BJ}, {GS_2})''')
+def add_single_start(GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2):
+    c.execute(f'''INSERT INTO starts (GameId, PitcherName, PitcherId, IsHomeTeam, Outs, H, R, ER, HR, BB, SO, NP, S, BF, GS, GS_BJ, GS_2)
+        VALUES ('{GameId}', '{PitcherName}',  {PitcherId}, {IsHomeTeam}, {Outs}, {H}, {R}, {ER}, {HR}, {BB}, {SO}, {NP}, {S}, {BF}, {GS}, {GS_BJ}, {GS_2})''')
 
     conn.commit()
 
 def add_single_game(Id, Date, HomeTeam, AwayTeam, Park, HomeTeamWon):
     c.execute(f'''INSERT INTO games (Id, Date, HomeTeam, AwayTeam, Park, HomeTeamWon)
-        VALUES ({Id}, '{Date}', '{HomeTeam}', '{AwayTeam}', '{Park}', {HomeTeamWon})''')
+        VALUES ('{Id}', '{Date}', '{HomeTeam}', '{AwayTeam}', '{Park}', {HomeTeamWon})''')
     
     conn.commit()
 
-add_single_game(1, '2017_05_01', 'STL Cardinals', 'ATL Barves', 'Microsoft Field', 1)
-add_single_start(1, 1, 'Michael Wacha', 12674, 1, 15, 3, 2, 1, 0, 3, 4, 85, 58, 23, 12, 12, 18)
+# add_single_game('blar', '2017_05_01', 'STL Cardinals', 'ATL Barves', 'Microsoft Field', 1)
+# add_single_start('blaz', 'Michael Wacha', 12674, 1, 15, 3, 2, 1, 0, 3, 4, 85, 58, 23, 12, 12, 18)
+
+handle_single_day(start)
